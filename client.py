@@ -1,30 +1,29 @@
+# לקוח לשליחת קבצים לשרת: מצפין קבצים, שולח אותם דרך סוקט, מוחק את הגרסה המוצפנת לאחר השליחה.
+
 import socket
 import os
 from concurrent.futures import ThreadPoolExecutor
-from encryptor import encrypt_file  # ייבוא הפונקציה להצפנה
+from encryptor import encrypt_file
 
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 5000
-MAX_THREADS = 5  # מספר מקסימלי של threads בו־זמנית
+MAX_THREADS = 5
 
 def send_file(full_path, base_folder):
+    """
+    מצפין קובץ, יוצר סוקט ומעביר אותו לשרת, ואז מוחק את הקובץ המוצפן.
+    """
     print(f"[DEBUG] Starting send_file for {full_path}")
 
     relative_path = os.path.relpath(full_path, base_folder)
 
     try:
-        print(f"Encrypting {full_path}...")
         encrypt_file(full_path)
-        print("[DEBUG] checking if the problem is in encrypted file...")
-
         encrypted_path = full_path + ".enc"
         encrypted_relative_path = relative_path + ".enc"
 
-        print("[DEBUG] Creating socket...")
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print(f"[DEBUG] Connecting to {SERVER_HOST}:{SERVER_PORT} ...")
         client.connect((SERVER_HOST, SERVER_PORT))
-        print(f"[DEBUG] Connected to server {SERVER_HOST}:{SERVER_PORT} successfully.")
 
         filename_bytes = encrypted_relative_path.encode()
         filename_length = len(filename_bytes)
@@ -52,6 +51,9 @@ def send_file(full_path, base_folder):
                 print(f"[-] Failed to delete encrypted file: {e}")
 
 def cleanup_old_encrypted_files(folder_path):
+    """
+    מוחק קבצים מוצפנים ישנים שנותרו בתיקייה.
+    """
     for root, dirs, files in os.walk(folder_path):
         for file in files:
             if file.endswith(".enc"):
@@ -61,14 +63,16 @@ def cleanup_old_encrypted_files(folder_path):
                     print(f"[-] Failed to delete old encrypted file {file}: {e}")
 
 def send_directory(folder_path):
+    """
+    שולח את כל הקבצים בתיקייה בצורה מרובת־תהליכים.
+    """
     all_files = []
-
     for root, dirs, files in os.walk(folder_path):
         if "__pycache__" in root:
-            continue  # דלג על תיקיות __pycache__
+            continue
         for file in files:
             if file.endswith(".enc"):
-                continue  # דלג על קבצים שכבר מוצפנים
+                continue
             full_path = os.path.join(root, file)
             all_files.append(full_path)
 
