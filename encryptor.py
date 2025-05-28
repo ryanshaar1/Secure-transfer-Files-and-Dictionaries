@@ -1,10 +1,20 @@
+# מודול להצפנת קבצים ופענוחם באמצעות מפתח שמור.
+
 from cryptography.fernet import Fernet
 import os
+
 def load_key():
+    """
+    טוען את המפתח הסימטרי מתוך הקובץ secret.key.
+    """
     key_path = os.path.join(os.path.dirname(__file__), "secret.key")
     with open(key_path, "rb") as key_file:
         return key_file.read()
+
 def encrypt_file(filepath):
+    """
+    מצפין קובץ נתון באמצעות Fernet ושומר אותו עם סיומת .enc.
+    """
     key = load_key()
     fernet = Fernet(key)
 
@@ -15,11 +25,13 @@ def encrypt_file(filepath):
 
     with open(filepath + ".enc", "wb") as encrypted_file:
         encrypted_file.write(encrypted_data)
+
     print(f"[+] file '{filepath}' encrypted successfully as '{filepath}.enc'")
 
-
-
 def decrypt_file(filepath):
+    """
+    מפענח קובץ מוצפן עם סיומת .enc ושומר אותו כקובץ מפוענח.
+    """
     key = load_key()
     fernet = Fernet(key)
 
@@ -28,23 +40,18 @@ def decrypt_file(filepath):
 
     decrypted_data = fernet.decrypt(encrypted_data)
 
-    base_name, ext = os.path.splitext(filepath)  # ext יכיל '.enc'
-
+    base_name, ext = os.path.splitext(filepath)
 
     if ext == ".enc":
-        base_name_without_enc, ext2 = os.path.splitext(base_name)  # 'hello.txt' → ('hello', '.txt')
+        base_name_without_enc, ext2 = os.path.splitext(base_name)
         new_path = f"{base_name_without_enc}_decrypted{ext2}"
     else:
         new_path = filepath + "_decrypted"
 
     with open(new_path, "wb") as dec_file:
         dec_file.write(decrypted_data)
-    
+
     print(f"[+] file '{filepath}' decrypted successfully as '{new_path}'")
-
-
-
-
 
 if __name__ == "__main__":
     mode = input("Encrypt or Decrypt? (e/d): ").strip().lower()
