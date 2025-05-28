@@ -1,6 +1,11 @@
+# סקריפט ליצירת מפתח הצפנה סימטרי ושמירתו בקובץ בשם secret.key
+
 from cryptography.fernet import Fernet
 
-def generate_key():#הפונקציה יוצרת מפתח הצפנה סימטרי חדש
+def generate_key():
+    """
+    מייצר מפתח הצפנה חדש ושומר אותו בקובץ secret.key.
+    """
     key = Fernet.generate_key()
     with open('secret.key', 'wb') as key_file:
         key_file.write(key)
